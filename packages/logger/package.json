@@ -16,6 +16,6 @@
     "pino": "^9.7.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.30"
+    "@types/node": "^26.6.5"
   }
 }
