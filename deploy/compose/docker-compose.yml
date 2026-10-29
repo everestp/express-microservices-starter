@@ -1,0 +1,65 @@
+name: express-microservices-starter
+
+services:
+  auth-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: local-dev-only
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  notes-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: notes_db
+      POSTGRES_USER: notes
+      POSTGRES_PASSWORD: local-dev-only
+    ports:
+      - "5434:5432"
+    volumes:
+      - notes-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notes -d notes_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  audit-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: audit_db
+      POSTGRES_USER: audit
+      POSTGRES_PASSWORD: local-dev-only
+    ports:
+      - "5435:5432"
+    volumes:
+      - audit-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U audit -d audit_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  nats:
+    image: nats:2.11-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats-data:/data
+
+volumes:
+  auth-data:
+  notes-data:
+  audit-data:
+  nats-data:
