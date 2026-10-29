@@ -1,8 +1,4 @@
-import {
-  createInMemoryRateLimit,
-  createServiceApp,
-  installErrorHandlers,
-} from "@starter/http-kit";
+import { createInMemoryRateLimit, createServiceApp, installErrorHandlers } from "@starter/http-kit";
 import { DownstreamError } from "@starter/service-client";
 import { createMetrics } from "@starter/telemetry";
 import type { ErrorRequestHandler } from "express";
@@ -57,9 +53,7 @@ export function createGatewayApp(config: GatewayEnv, container: GatewayContainer
     response.setHeader("content-type", metrics.registry.contentType);
     response.end(await metrics.registry.metrics());
   });
-  app.use(
-    createInMemoryRateLimit({ limit: config.RATE_LIMIT_MAX, windowMs: 60_000 }),
-  );
+  app.use(createInMemoryRateLimit({ limit: config.RATE_LIMIT_MAX, windowMs: 60_000 }));
 
   app.get("/.well-known/jwks.json", async (_request, response, next) => {
     try {
