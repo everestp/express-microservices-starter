@@ -15,7 +15,7 @@
   "dependencies": {
     "@starter/contracts": "workspace:*",
     "nats": "^2.29.3",
-    "zod": "^3.25.28"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.15.30"

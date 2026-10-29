@@ -13,7 +13,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "pino": "^9.7.0"
+    "pino": "^10.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.30"
