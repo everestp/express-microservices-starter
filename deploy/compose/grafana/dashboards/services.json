@@ -1,0 +1,8 @@
+{
+  "title": "Service Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [],
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser"
+}

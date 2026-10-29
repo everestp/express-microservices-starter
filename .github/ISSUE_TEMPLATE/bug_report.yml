@@ -1,0 +1,21 @@
+name: Bug report
+description: Report a reproducible defect
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Include the expected and actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: Steps, request, or minimal example
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Runtime and package version

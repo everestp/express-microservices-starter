@@ -1,0 +1,8 @@
+apiVersion: 1
+providers:
+  - name: Starter dashboards
+    orgId: 1
+    folder: Services
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

@@ -6,3 +6,4 @@ coverage/
 !.env.example
 .turbo/
 *.log
+keys/*.jwk.json
