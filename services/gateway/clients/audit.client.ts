@@ -1,8 +1,8 @@
 import { auditEventListSchema } from "@starter/contracts";
 import { createServiceClient } from "@starter/service-client";
 
-export function createAuditClient(baseUrl: string) {
-  const client = createServiceClient({ baseUrl });
+export function createAuditClient(baseUrl: string, serviceToken: () => Promise<string>) {
+  const client = createServiceClient({ baseUrl, serviceToken });
   return {
     listEvents: (token: string, requestId: string, query = "") =>
       client.request(

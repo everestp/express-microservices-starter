@@ -1,68 +1,21 @@
 import type { EventBus, EventEnvelope } from "@starter/event-bus";
 import type { Pool } from "pg";
-
-interface NoteEventData {
-  noteId: string;
-  ownerUserId: string;
-}
-
-interface UserRegisteredData {
-  userId: string;
-}
-
-function auditFields(event: EventEnvelope): {
-  actorId: string;
-  resourceType: string;
-  resourceId: string;
-} | null {
-  const data = event.data as unknown as Partial<
-    NoteEventData & UserRegisteredData
-  >;
-  if (event.type === "user.registered.v1" && data.userId) {
-    return {
-      actorId: data.userId,
-      resourceType: "user",
-      resourceId: data.userId,
-    };
-  }
-  if (event.type.startsWith("note.") && data.ownerUserId && data.noteId) {
-    return {
-      actorId: data.ownerUserId,
-      resourceType: "note",
-      resourceId: data.noteId,
-    };
-  }
-  return null;
-}
+import { toAuditFields } from "../application/audit.service.js";
+import { createAuditRepository } from "../infrastructure/audit.repository.js";
+import { createUserRegisteredHandler } from "./handlers/user-registered.handler.js";
+import { createNoteCreatedHandler } from "./handlers/note-created.handler.js";
+import { createNoteUpdatedHandler } from "./handlers/note-updated.handler.js";
+import { createNoteDeletedHandler } from "./handlers/note-deleted.handler.js";
 
 export function createAuditConsumer(pool: Pool, bus: EventBus) {
+  const repository = createAuditRepository(pool);
   async function handle(event: EventEnvelope): Promise<void> {
-    const fields = auditFields(event);
+    const fields = toAuditFields(event);
     if (!fields) throw new Error(`Unsupported audit event: ${event.type}`);
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      const inserted = await client.query(
-        `INSERT INTO processed_events (event_id) VALUES ($1)
-         ON CONFLICT (event_id) DO NOTHING RETURNING event_id`,
-        [event.eventId],
-      );
-      if (inserted.rowCount) {
-        await client.query(
-          `INSERT INTO audit_events
-             (event_id, actor_id, action, resource_type, resource_id, payload, occurred_at)
-           VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)`,
-          [
-            event.eventId,
-            fields.actorId,
-            event.type,
-            fields.resourceType,
-            fields.resourceId,
-            JSON.stringify(event.data),
-            event.occurredAt,
-          ],
-        );
-      }
+      await repository.recordOnce(client, event, fields);
       await client.query("COMMIT");
     } catch (error) {
       await client.query("ROLLBACK");
@@ -73,15 +26,13 @@ export function createAuditConsumer(pool: Pool, bus: EventBus) {
   }
 
   async function start(): Promise<Array<() => Promise<void>>> {
-    const subjects = [
-      "user.registered.v1",
-      "note.created.v1",
-      "note.updated.v1",
-      "note.deleted.v1",
+    const handlers = [
+      ["user.registered.v1", createUserRegisteredHandler(handle)],
+      ["note.created.v1", createNoteCreatedHandler(handle)],
+      ["note.updated.v1", createNoteUpdatedHandler(handle)],
+      ["note.deleted.v1", createNoteDeletedHandler(handle)],
     ];
-    return Promise.all(
-      subjects.map((subject) => bus.subscribe(subject, handle)),
-    );
+    return Promise.all(handlers.map(([subject, handler]) => bus.subscribe(subject, handler)));
   }
 
   return { handle, start };

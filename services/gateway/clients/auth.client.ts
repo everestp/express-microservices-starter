@@ -7,8 +7,8 @@ import {
 } from "@starter/contracts";
 import { createServiceClient } from "@starter/service-client";
 
-export function createAuthClient(baseUrl: string) {
-  const client = createServiceClient({ baseUrl, retries: 0 });
+export function createAuthClient(baseUrl: string, serviceToken: () => Promise<string>) {
+  const client = createServiceClient({ baseUrl, retries: 0, serviceToken });
   return {
     register: (body: unknown, requestId: string) =>
       client.request(

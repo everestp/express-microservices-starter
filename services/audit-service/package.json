@@ -15,8 +15,10 @@
   },
   "dependencies": {
     "@starter/database": "workspace:*",
+    "@starter/contracts": "workspace:*",
     "@starter/event-bus": "workspace:*",
     "@starter/http-kit": "workspace:*",
+    "@starter/service-auth": "workspace:*",
     "express": "^5.1.0",
     "pg": "^8.16.0"
   },

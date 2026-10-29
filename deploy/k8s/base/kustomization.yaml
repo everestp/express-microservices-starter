@@ -9,3 +9,4 @@ resources:
   - networkpolicy.yaml
   - pdb.yaml
   - autoscaling.yaml
+  - migration-jobs.yaml

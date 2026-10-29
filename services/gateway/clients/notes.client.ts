@@ -8,8 +8,8 @@ import {
 import { createServiceClient } from "@starter/service-client";
 import { z } from "zod";
 
-export function createNotesClient(baseUrl: string) {
-  const client = createServiceClient({ baseUrl });
+export function createNotesClient(baseUrl: string, serviceToken: () => Promise<string>) {
+  const client = createServiceClient({ baseUrl, serviceToken });
   function headers(token: string, requestId: string): HeadersInit {
     return { authorization: token, "x-request-id": requestId };
   }

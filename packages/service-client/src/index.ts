@@ -16,6 +16,7 @@ export interface ServiceClientConfig {
   timeoutMs?: number;
   retries?: number;
   headers?: Record<string, string>;
+  serviceToken?: () => Promise<string>;
 }
 
 export function createServiceClient(config: ServiceClientConfig) {
@@ -30,11 +31,14 @@ export function createServiceClient(config: ServiceClientConfig) {
       try {
         const response = await fetch(new URL(path, config.baseUrl), {
           ...init,
-          headers: { ...config.headers, ...init.headers },
+          headers: {
+            ...config.headers,
+            ...(config.serviceToken ? { "x-service-token": await config.serviceToken() } : {}),
+            ...init.headers,
+          },
           signal: AbortSignal.timeout(timeoutMs),
         });
-        if (response.status < 500 || !retryable || attempt >= retries)
-          return response;
+        if (response.status < 500 || !retryable || attempt >= retries) return response;
       } catch (error) {
         if (!retryable || attempt >= retries) throw error;
       }
@@ -50,11 +54,7 @@ export function createServiceClient(config: ServiceClientConfig) {
   });
 
   return {
-    async request<T>(
-      path: string,
-      init: RequestInit,
-      schema: z.ZodType<T>,
-    ): Promise<T> {
+    async request<T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<T> {
       const response = (await breaker.fire(path, init)) as Response;
       if (!response.ok)
         throw new DownstreamError(
@@ -64,10 +64,7 @@ export function createServiceClient(config: ServiceClientConfig) {
       if (response.status === 204) return schema.parse(undefined);
       const parsed = schema.safeParse(await response.json());
       if (!parsed.success)
-        throw new DownstreamError(
-          "Downstream response did not match its contract",
-          502,
-        );
+        throw new DownstreamError("Downstream response did not match its contract", 502);
       return parsed.data;
     },
     breaker,

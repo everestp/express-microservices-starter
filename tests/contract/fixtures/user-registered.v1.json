@@ -1,0 +1,10 @@
+{
+  "eventId": "ac171543-48ca-4b13-8542-4efb92f8ae77",
+  "type": "user.registered.v1",
+  "version": 1,
+  "occurredAt": "2026-10-29T12:00:00.000Z",
+  "data": {
+    "userId": "a4ccf589-24e3-48c8-8876-cb134c1080c9",
+    "email": "person@example.com"
+  }
+}

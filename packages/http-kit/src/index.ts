@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Server } from "node:http";
-import express, { type ErrorRequestHandler, type Express } from "express";
+import express, { type ErrorRequestHandler, type Express, type RequestHandler } from "express";
 
 export class HttpError extends Error {
   constructor(
@@ -10,6 +10,29 @@ export class HttpError extends Error {
     super(message);
     this.name = "HttpError";
   }
+}
+
+export function createInMemoryRateLimit(options: {
+  limit: number;
+  windowMs: number;
+}): RequestHandler {
+  const windows = new Map<string, { startedAt: number; count: number }>();
+  return (request, _response, next) => {
+    const now = Date.now();
+    const key = request.ip;
+    const current = windows.get(key);
+    if (!current || now - current.startedAt >= options.windowMs) {
+      windows.set(key, { startedAt: now, count: 1 });
+      next();
+      return;
+    }
+    current.count += 1;
+    if (current.count > options.limit) {
+      next(new HttpError(429, "Request rate limit exceeded"));
+      return;
+    }
+    next();
+  };
 }
 
 export function createServiceApp(serviceName: string): Express {
@@ -45,8 +68,7 @@ export function installErrorHandlers(app: Express): void {
         : typeof error === "object" && error !== null && "status" in error
           ? Number(error.status)
           : 500;
-    const status =
-      candidateStatus >= 400 && candidateStatus < 600 ? candidateStatus : 500;
+    const status = candidateStatus >= 400 && candidateStatus < 600 ? candidateStatus : 500;
     const title =
       status === 400
         ? "Bad Request"
@@ -75,11 +97,7 @@ export function installErrorHandlers(app: Express): void {
   }) satisfies ErrorRequestHandler);
 }
 
-export function listen(
-  app: Express,
-  port: number,
-  serviceName: string,
-): Server {
+export function listen(app: Express, port: number, serviceName: string): Server {
   return app.listen(port, "0.0.0.0", () => {
     console.info(`${serviceName} listening on ${port}`);
   });

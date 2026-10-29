@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: auth-service-migrations
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/your-org/express-microservices-auth-service:latest
+          command: ["pnpm", "--filter", "auth-service", "migrate"]
+          env:
+            - name: AUTH_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: auth-service-secrets, key: database-url } }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: notes-service-migrations
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/your-org/express-microservices-notes-service:latest
+          command: ["pnpm", "--filter", "notes-service", "migrate"]
+          env:
+            - name: NOTES_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: notes-service-secrets, key: database-url } }
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: audit-service-migrations
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/your-org/express-microservices-audit-service:latest
+          command: ["pnpm", "--filter", "audit-service", "migrate"]
+          env:
+            - name: AUDIT_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: audit-service-secrets, key: database-url } }
